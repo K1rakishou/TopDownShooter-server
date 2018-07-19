@@ -4,20 +4,20 @@ import io.netty.buffer.ByteBufAllocator
 import io.vertx.core.buffer.Buffer
 import model.ConnectionResult
 import model.ErrorCode
-import model.PacketId
+import model.PacketType
 
 class ConnectResponse(
 	val connectionResult: ConnectionResult,
 	entityId: Long,
-	packetId: PacketId,
+	packetType: PacketType,
 	errorCode: ErrorCode
-) : BaseResponse(entityId, packetId, errorCode) {
+) : BaseResponse(entityId, packetType, errorCode) {
 
 	override fun toBuffer(): Buffer {
 		val byteBuffer = ByteBufAllocator.DEFAULT.buffer()
 
 		byteBuffer.writeLong(entityId)
-		byteBuffer.writeInt(packetId.id)
+		byteBuffer.writeInt(packetType.id)
 		byteBuffer.writeInt(connectionResult.result)
 		byteBuffer.writeInt(errorCode.value)
 
