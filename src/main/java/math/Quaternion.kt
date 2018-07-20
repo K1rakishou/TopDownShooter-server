@@ -1,23 +1,24 @@
-package model
+package math
 
 import io.vertx.core.buffer.Buffer
 
-data class Vector3(
-	val x: Float,
-	val y: Float,
-	val z: Float
+data class Quaternion(
+	var x: Float,
+	var y: Float,
+	var z: Float,
+	var w: Float
 ) {
-
 	companion object {
-		const val SIZE = 12
+		const val SIZE = 16
 
-		fun fromBuffer(buffer: Buffer, offset: Int): Vector3? {
+		fun fromBuffer(buffer: Buffer, offset: Int): Quaternion? {
 			try {
 				val x = buffer.getFloat(offset)
 				val y = buffer.getFloat(offset + 4)
 				val z = buffer.getFloat(offset + 8)
+				val w = buffer.getFloat(offset + 12)
 
-				return Vector3(x, y, z)
+				return Quaternion(x, y, z, w)
 			} catch (error: Throwable) {
 				error.printStackTrace()
 				return null

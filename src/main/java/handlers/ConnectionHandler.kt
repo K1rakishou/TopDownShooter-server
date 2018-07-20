@@ -1,22 +1,26 @@
 package handlers
 
 import io.vertx.core.buffer.Buffer
-import model.ConnectionResult
-import model.ErrorCode
-import model.PacketType
+import io.vertx.core.net.NetSocket
+import manager.PlayerManager
+import model.network.ConnectionResult
+import model.network.PacketType
 import model.response.BaseResponse
-import model.response.ConnectResponse
+import model.response.ConnectionResponse
 import java.util.concurrent.atomic.AtomicInteger
 
-class ConnectionHandler : BaseHandler() {
+class ConnectionHandler(
+	private val playerManager: PlayerManager
+) : BaseHandler() {
 
-	fun handle(input: Buffer, packetType: PacketType, offset: AtomicInteger): BaseResponse {
+	fun handle(socket: NetSocket, input: Buffer, packetType: PacketType, offset: AtomicInteger): BaseResponse {
 		val length = input.getIntLE(offset.getAndAdd(4))
 		val playerName = input.getString(offset.get(), offset.get() + length)
 			.also { offset.addAndGet(length) }
 
-		println("playerName = ${playerName}")
+		val playerIp = socket.remoteAddress().host()
+		playerManager.addPlayer(socket, playerIp, playerName)
 
-		return ConnectResponse(ConnectionResult.Connected, 0, packetType, ErrorCode.Ok)
+		return ConnectionResponse(ConnectionResult.Connected, packetType)
 	}
 }

@@ -1,13 +1,14 @@
 package model.response
 
 import io.vertx.core.buffer.Buffer
-import model.ErrorCode
-import model.PacketType
+import model.network.PacketType
 
 abstract class BaseResponse(
-	val entityId: Long,
-	val packetType: PacketType,
-	val errorCode: ErrorCode
+	private val packetType: PacketType
 ) {
-	abstract fun toBuffer(): Buffer
+	open fun toBuffer(): Buffer {
+		val buffer = Buffer.buffer()
+		buffer.appendIntLE(packetType.id)
+		return buffer
+	}
 }

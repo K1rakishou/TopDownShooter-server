@@ -1,34 +1,44 @@
 
-import handlers.ConnectionHandler
 import handlers.PacketHandler
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.net.NetSocket
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import kotlinx.coroutines.experimental.launch
+import model.Constants
+import model.ErrorCode
 import model.Response
 
-class ServerVerticle : CoroutineVerticle() {
-	private val connectionHandler = ConnectionHandler()
-	private val packetHandler = PacketHandler(connectionHandler)
+class ServerVerticle(
+	private val packetHandler: PacketHandler
+) : CoroutineVerticle() {
+	private val HEADER_SIZE = 8
+	private val RECEIVER_ID_SIZE = 8
 
 	override suspend fun start() {
 		val server = vertx.createNetServer()
 
 		server.connectHandler { socket ->
 			socket.handler { buffer ->
-				launch {
-					handleData(buffer, socket)
-				}
+				launch { handleData(buffer, socket) }
 			}
+		}.exceptionHandler { error ->
+			error.printStackTrace()
 		}.listen(14887)
 	}
 
 	private fun handleData(buffer: Buffer, socket: NetSocket) {
-		val response = packetHandler.handle(buffer)
+		println("new request from ${socket.remoteAddress().host()}")
+
+		val response = try {
+			packetHandler.handle(socket, buffer)
+		} catch (error: Throwable) {
+			error.printStackTrace()
+			ErrorCode.UnknownError
+		}
 
 		when (response) {
 			is Response.Ok -> {
-				socket.write(response.data)
+				sendResponse(response, socket)
 			}
 
 			is Response.Error -> {
@@ -36,5 +46,17 @@ class ServerVerticle : CoroutineVerticle() {
 				socket.close()
 			}
 		}
+	}
+
+	private fun sendResponse(response: Response.Ok, socket: NetSocket) {
+		val dataLen = response.data.length()
+		val outBuffer = Buffer.buffer(dataLen + HEADER_SIZE)
+
+		outBuffer.appendIntLE(Constants.MAGIC_NUMBER)
+		outBuffer.appendIntLE(dataLen + RECEIVER_ID_SIZE)
+		outBuffer.appendLongLE(response.receiverId)
+		outBuffer.appendBuffer(response.data)
+
+		socket.write(outBuffer)
 	}
 }
