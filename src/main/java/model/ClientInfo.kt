@@ -2,14 +2,13 @@ package model
 
 import io.vertx.core.net.NetSocket
 
-class PlayerInLobby(
+class ClientInfo(
 	val socket: NetSocket,
 	val remotePlayerId: String,
-	var isReady: Boolean
-) {
+	val playerId: Int) {
 
 	override fun equals(other: Any?): Boolean {
-		if (other == null || other !is Player) {
+		if (other == null || other !is ClientInfo) {
 			return false
 		}
 

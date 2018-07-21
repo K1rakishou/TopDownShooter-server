@@ -56,6 +56,8 @@ class LobbyManager(
 		mutex.withLock {
 			if (activeLobbies.containsKey(lobbyId)) {
 				activeLobbies[lobbyId]!!.broadcast(currentPlayerRemoteId, baseResponse)
+			} else {
+				println("Could not send broadcast response, activeLobbies does not contain lobby with id $lobbyId")
 			}
 		}
 	}

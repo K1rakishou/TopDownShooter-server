@@ -1,4 +1,4 @@
-package model
+package model.entity
 
 import math.Vector3
 

@@ -22,6 +22,7 @@ class CreateLobbyHandler(
 	): BaseResponse {
 		return when (protocolVersion) {
 			ProtocolVersion.V1 -> handle_V1(socket, remotePlayerId, input, offset)
+			else -> throw IllegalArgumentException("Unknown protocol version $protocolVersion")
 		}
 	}
 
@@ -33,7 +34,9 @@ class CreateLobbyHandler(
 	): BaseResponse {
 		val lobbyId = lobbyManager.createLobby()
 
-		if (lobbyManager.joinLobby(lobbyId, remotePlayerId) !is LobbyManager.JoinLobbyResult.Joined) {
+		val joinLobbyResult = lobbyManager.joinLobby(lobbyId, remotePlayerId)
+		if (joinLobbyResult !is LobbyManager.JoinLobbyResult.Joined) {
+			println("joinLobbyResult = $joinLobbyResult")
 			return CreateLobbyResponse.error(ErrorCode.UnknownError)
 		}
 

@@ -1,4 +1,4 @@
-
+package verticle
 import handlers.MainPacketHandler
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.net.NetSocket
@@ -8,11 +8,14 @@ import model.Constants
 import model.ErrorCode
 import model.Response
 
-class ServerVerticle(
-	private val mainPacketHandler: MainPacketHandler
-) : CoroutineVerticle() {
+class ServerVerticle : CoroutineVerticle() {
+	private lateinit var mainPacketHandler: MainPacketHandler
 	private val HEADER_SIZE = 8
 	private val RECEIVER_ID_SIZE = 8
+
+	fun setMainPacketHandler(mainPacketHandler: MainPacketHandler) {
+		this.mainPacketHandler = mainPacketHandler
+	}
 
 	override suspend fun start() {
 		val server = vertx.createNetServer()

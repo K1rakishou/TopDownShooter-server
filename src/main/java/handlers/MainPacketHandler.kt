@@ -30,11 +30,14 @@ class MainPacketHandler(
 		val receiverId = input.getLongLE(offset.getAndAdd(LONG_SIZE))
 		val protocolVersion = ProtocolVersion.fromValue(input.getIntLE(offset.getAndAdd(INT_SIZE)))
 
+		println("packetType = $packetType")
+
 		val response = when (packetType) {
 			PacketType.Connect -> connectionHandler.handle(protocolVersion, socket, remotePlayerId, input, offset)
 			PacketType.Disconnect -> TODO()
 			PacketType.CreateLobby -> createLobbyHandler.handle(protocolVersion, socket, remotePlayerId, input, offset)
 			PacketType.JoinLobby -> joinLobbyHandler.handle(protocolVersion, socket, remotePlayerId, input, offset)
+			else -> throw IllegalArgumentException("Unknown packetType ${packetType}")
 		}
 
 		return Response.Ok(receiverId, response.toBuffer())

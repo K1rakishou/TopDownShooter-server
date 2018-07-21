@@ -4,30 +4,30 @@ import io.vertx.core.net.NetSocket
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.sync.Mutex
 import kotlinx.coroutines.experimental.sync.withLock
-import model.Player
+import model.ClientInfo
 import model.response.BaseResponse
 import java.util.concurrent.atomic.AtomicInteger
 
 class PlayerManager {
 	private val mutex = Mutex()
 	private val playerIdPool = AtomicInteger()
-	private val playersList = mutableMapOf<String, Player>()
+	private val playersList = mutableMapOf<String, ClientInfo>()
 
-	suspend fun addPlayer(netSocket: NetSocket, remotePlayerId: String, playerName: String): Boolean {
+	suspend fun addPlayer(netSocket: NetSocket, remotePlayerId: String): Boolean {
 		return mutex.withLock {
 			if (playersList.containsKey(remotePlayerId)) {
 				return@withLock false
 			}
 
-			playersList[remotePlayerId] = Player(netSocket, remotePlayerId, playerIdPool.getAndIncrement(), playerName)
+			playersList[remotePlayerId] = ClientInfo(netSocket, remotePlayerId, playerIdPool.getAndIncrement())
 			return@withLock true
 		}
 	}
 
-	suspend fun removePlayer(player: Player) {
+	suspend fun removePlayer(clientInfo: ClientInfo) {
 		mutex.withLock {
-			playersList.remove(player.remotePlayerId)
-			player.socket.close()
+			playersList.remove(clientInfo.remotePlayerId)
+			clientInfo.socket.close()
 		}
 	}
 
@@ -52,6 +52,6 @@ class PlayerManager {
 	}
 
 	suspend fun getPlayerId(playerIp: String): Int? {
-		return mutex.withLock { playersList[playerIp]?.palyerId }
+		return mutex.withLock { playersList[playerIp]?.playerId }
 	}
 }

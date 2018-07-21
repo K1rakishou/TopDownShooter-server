@@ -24,6 +24,7 @@ class JoinLobbyHandler(
 	): BaseResponse {
 		return when (protocolVersion) {
 			ProtocolVersion.V1 -> handle_V1(socket, remotePlayerId, input, offset)
+			else -> throw IllegalArgumentException("Unknown protocol version $protocolVersion")
 		}
 	}
 
@@ -39,13 +40,16 @@ class JoinLobbyHandler(
 		when (result) {
 			is LobbyManager.JoinLobbyResult.Joined -> {
 				if (result.playerId == null) {
+					println("Could not join lobby with id ${lobbyId}, unknown error")
 					return JoinLobbyResponse.error(ErrorCode.UnknownError)
 				}
 			}
 			is LobbyManager.JoinLobbyResult.LobbyIsFull -> {
+				println("Could not join lobby with id ${lobbyId}, lobby is full")
 				return JoinLobbyResponse.error(ErrorCode.LobbyIsFull)
 			}
 			is LobbyManager.JoinLobbyResult.LobbyDoesNotExist -> {
+				println("Could not join lobby with id ${lobbyId}, lobby does not exists")
 				return JoinLobbyResponse.error(ErrorCode.LobbyDoesNotExist)
 			}
 		}

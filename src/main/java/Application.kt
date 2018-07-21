@@ -6,8 +6,15 @@ import handlers.MainPacketHandler
 import io.vertx.core.Vertx
 import manager.LobbyManager
 import manager.PlayerManager
+import verticle.ServerVerticle
 
 fun main(args: Array<String>) {
+
+	/**
+	 * Server verticle
+	 * */
+	val serverVerticle = ServerVerticle()
+
 	/**
 	 * Managers
 	 * */
@@ -26,7 +33,8 @@ fun main(args: Array<String>) {
 	 * */
 	val packetHandler = MainPacketHandler(connectionHandler, createLobbyHandler, joinLobbyHandler)
 
-	Vertx.vertx().deployVerticle(ServerVerticle(packetHandler)) { ar ->
+	serverVerticle.setMainPacketHandler(packetHandler)
+	Vertx.vertx().deployVerticle(serverVerticle) { ar ->
 		if (ar.succeeded()) {
 			println("Server started")
 		} else {
