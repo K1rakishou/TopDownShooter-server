@@ -4,7 +4,7 @@ import io.vertx.core.net.NetSocket
 
 class PlayerInLobby(
 	val socket: NetSocket,
-	val playerIp: String,
+	val remotePlayerId: String,
 	var isReady: Boolean
 ) {
 
@@ -13,10 +13,10 @@ class PlayerInLobby(
 			return false
 		}
 
-		return playerIp == other.playerIp
+		return remotePlayerId == other.remotePlayerId
 	}
 
 	override fun hashCode(): Int {
-		return 31 * playerIp.hashCode()
+		return 31 * remotePlayerId.hashCode()
 	}
 }

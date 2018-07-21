@@ -34,6 +34,7 @@ class ServerVerticle(
 		println("new request from ${socket.remoteAddress().host()}")
 
 		val response = try {
+			println("RECEIVING <<< ${byteArrayToHex(buffer.bytes)}")
 			mainPacketHandler.handle(socket, buffer)
 		} catch (error: Throwable) {
 			error.printStackTrace()
@@ -42,6 +43,7 @@ class ServerVerticle(
 
 		when (response) {
 			is Response.Ok -> {
+				println("SENDING >>> ${byteArrayToHex(response.data.bytes)}")
 				sendResponse(response, socket)
 			}
 
@@ -62,5 +64,13 @@ class ServerVerticle(
 		outBuffer.appendBuffer(response.data)
 
 		socket.write(outBuffer)
+	}
+
+	fun byteArrayToHex(a: ByteArray): String {
+		val sb = StringBuilder(a.size * 2)
+		for (b in a) {
+			sb.append(String.format("%02x ", b))
+		}
+		return sb.toString()
 	}
 }

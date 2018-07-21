@@ -24,7 +24,7 @@ class LobbyManager(
 		return lobbyId
 	}
 
-	suspend fun joinLobby(lobbyId: Long, playerIp: String): JoinLobbyResult {
+	suspend fun joinLobby(lobbyId: Long, remotePlayerId: String): JoinLobbyResult {
 		return mutex.withLock {
 			if (!activeLobbies.containsKey(lobbyId)) {
 				return@withLock JoinLobbyResult.LobbyDoesNotExist()
@@ -34,7 +34,7 @@ class LobbyManager(
 				return@withLock JoinLobbyResult.LobbyIsFull()
 			}
 
-			val playerId = activeLobbies[lobbyId]!!.join(playerIp)
+			val playerId = activeLobbies[lobbyId]!!.join(remotePlayerId)
 			return@withLock JoinLobbyResult.Joined(playerId)
 		}
 	}
@@ -52,10 +52,10 @@ class LobbyManager(
 		}
 	}
 
-	suspend fun broadcast(lobbyId: Long, currentPlayerIp: String, baseResponse: BaseResponse) {
+	suspend fun broadcast(lobbyId: Long, currentPlayerRemoteId: String, baseResponse: BaseResponse) {
 		mutex.withLock {
 			if (activeLobbies.containsKey(lobbyId)) {
-				activeLobbies[lobbyId]!!.broadcast(currentPlayerIp, baseResponse)
+				activeLobbies[lobbyId]!!.broadcast(currentPlayerRemoteId, baseResponse)
 			}
 		}
 	}

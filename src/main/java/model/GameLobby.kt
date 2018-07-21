@@ -15,25 +15,25 @@ class GameLobby(
 	private val playersInLobby = mutableListOf<String>()
 	private val playerReadyStateMap = mutableMapOf<String, Boolean>()
 
-	suspend fun join(playerIp: String): Int? {
+	suspend fun join(remotePlayerId: String): Int? {
 		var playerId: Int? = null
 
 		mutex.withLock {
-			assert(!playerReadyStateMap.containsKey(playerIp))
+			assert(!playerReadyStateMap.containsKey(remotePlayerId))
 
-			playersInLobby += playerIp
-			playerReadyStateMap[playerIp] = false
+			playersInLobby += remotePlayerId
+			playerReadyStateMap[remotePlayerId] = false
 
-			playerId = playerManager.getPlayerId(playerIp)
+			playerId = playerManager.getPlayerId(remotePlayerId)
 		}
 
 		return playerId
 	}
 
-	suspend fun quit(playerIp: String) {
+	suspend fun quit(remotePlayerId: String) {
 		mutex.withLock {
-			playersInLobby.removeFirst { it == playerIp }
-			playerReadyStateMap.remove(playerIp)
+			playersInLobby.removeFirst { it == remotePlayerId }
+			playerReadyStateMap.remove(remotePlayerId)
 		}
 	}
 
@@ -45,13 +45,13 @@ class GameLobby(
 		return mutex.withLock { playersInLobby.size }
 	}
 
-	suspend fun playerSetReady(playerIp: String, isReady: Boolean) {
+	suspend fun playerSetReady(remotePlayerId: String, isReady: Boolean) {
 		mutex.withLock {
-			if (!playerReadyStateMap.containsKey(playerIp)) {
+			if (!playerReadyStateMap.containsKey(remotePlayerId)) {
 				return@withLock
 			}
 
-			playerReadyStateMap[playerIp] = isReady
+			playerReadyStateMap[remotePlayerId] = isReady
 			allReady.set(playerReadyStateMap.values.any { isReady -> !isReady })
 		}
 	}
@@ -60,9 +60,9 @@ class GameLobby(
 		return allReady.get()
 	}
 
-	suspend fun broadcast(currentPlayerIp: String, baseResponse: BaseResponse) {
+	suspend fun broadcast(currentPlayerRemoteId: String, baseResponse: BaseResponse) {
 		val localPlayersInLobby = mutex.withLock {
-			playersInLobby.filter { it != currentPlayerIp }
+			playersInLobby.filter { it != currentPlayerRemoteId }
 		}
 
 		playerManager.broadcastTo(localPlayersInLobby, baseResponse)

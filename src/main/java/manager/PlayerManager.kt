@@ -13,20 +13,20 @@ class PlayerManager {
 	private val playerIdPool = AtomicInteger()
 	private val playersList = mutableMapOf<String, Player>()
 
-	suspend fun addPlayer(netSocket: NetSocket, playerIp: String, playerName: String): Boolean {
+	suspend fun addPlayer(netSocket: NetSocket, remotePlayerId: String, playerName: String): Boolean {
 		return mutex.withLock {
-			if (playersList.containsKey(playerIp)) {
+			if (playersList.containsKey(remotePlayerId)) {
 				return@withLock false
 			}
 
-			playersList[playerIp] = Player(netSocket, playerIp, playerIdPool.getAndIncrement(), playerName)
+			playersList[remotePlayerId] = Player(netSocket, remotePlayerId, playerIdPool.getAndIncrement(), playerName)
 			return@withLock true
 		}
 	}
 
 	suspend fun removePlayer(player: Player) {
 		mutex.withLock {
-			playersList.remove(player.playerIp)
+			playersList.remove(player.remotePlayerId)
 			player.socket.close()
 		}
 	}

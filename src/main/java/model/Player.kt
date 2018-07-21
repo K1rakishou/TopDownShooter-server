@@ -5,7 +5,7 @@ import math.Vector3
 
 class Player(
 	val socket: NetSocket,
-	val playerIp: String,
+	val remotePlayerId: String,
 	val palyerId: Int,
 	val playerName: String
 ) : NetworkEntity(playerName, Vector3.zero()) {
@@ -15,10 +15,10 @@ class Player(
 			return false
 		}
 
-		return playerIp == other.playerIp
+		return remotePlayerId == other.remotePlayerId
 	}
 
 	override fun hashCode(): Int {
-		return 31 * playerIp.hashCode()
+		return 31 * remotePlayerId.hashCode()
 	}
 }

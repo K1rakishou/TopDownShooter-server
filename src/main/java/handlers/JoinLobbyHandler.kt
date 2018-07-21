@@ -3,8 +3,9 @@ package handlers
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.net.NetSocket
 import manager.LobbyManager
+import model.Constants.LONG_SIZE
 import model.ErrorCode
-import model.network.PacketType
+import model.network.ProtocolVersion
 import model.response.BaseResponse
 import model.response.JoinLobbyResponse
 import model.response.PlayerJoinedLobbyResponse
@@ -14,9 +15,26 @@ class JoinLobbyHandler(
 	private val lobbyManager: LobbyManager
 ) : BaseHandler() {
 
-	override suspend fun handle(socket: NetSocket, playerIp: String, input: Buffer, packetType: PacketType, offset: AtomicInteger): BaseResponse {
-		val lobbyId = input.getLongLE(offset.getAndAdd(LONG))
-		val result = lobbyManager.joinLobby(lobbyId, playerIp)
+	override suspend fun handle(
+		protocolVersion: ProtocolVersion,
+		socket: NetSocket,
+		remotePlayerId: String,
+		input: Buffer,
+		offset: AtomicInteger
+	): BaseResponse {
+		return when (protocolVersion) {
+			ProtocolVersion.V1 -> handle_V1(socket, remotePlayerId, input, offset)
+		}
+	}
+
+	private suspend fun handle_V1(
+		socket: NetSocket,
+		remotePlayerId: String,
+		input: Buffer,
+		offset: AtomicInteger
+	): BaseResponse {
+		val lobbyId = input.getLongLE(offset.getAndAdd(LONG_SIZE))
+		val result = lobbyManager.joinLobby(lobbyId, remotePlayerId)
 
 		when (result) {
 			is LobbyManager.JoinLobbyResult.Joined -> {
@@ -32,7 +50,7 @@ class JoinLobbyHandler(
 			}
 		}
 
-		lobbyManager.broadcast(lobbyId, playerIp, PlayerJoinedLobbyResponse.create(result.playerId))
+		lobbyManager.broadcast(lobbyId, remotePlayerId, PlayerJoinedLobbyResponse.create(result.playerId))
 
 		return JoinLobbyResponse.success()
 	}

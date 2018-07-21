@@ -4,7 +4,7 @@ import io.vertx.core.buffer.Buffer
 import io.vertx.core.net.NetSocket
 import manager.LobbyManager
 import model.ErrorCode
-import model.network.PacketType
+import model.network.ProtocolVersion
 import model.response.BaseResponse
 import model.response.CreateLobbyResponse
 import java.util.concurrent.atomic.AtomicInteger
@@ -13,10 +13,27 @@ class CreateLobbyHandler(
 	private val lobbyManager: LobbyManager
 ) : BaseHandler() {
 
-	override suspend fun handle(socket: NetSocket, playerIp: String, input: Buffer, packetType: PacketType, offset: AtomicInteger): BaseResponse {
+	override suspend fun handle(
+		protocolVersion: ProtocolVersion,
+		socket: NetSocket,
+		remotePlayerId: String,
+		input: Buffer,
+		offset: AtomicInteger
+	): BaseResponse {
+		return when (protocolVersion) {
+			ProtocolVersion.V1 -> handle_V1(socket, remotePlayerId, input, offset)
+		}
+	}
+
+	private suspend fun handle_V1(
+		socket: NetSocket,
+		remotePlayerId: String,
+		input: Buffer,
+		offset: AtomicInteger
+	): BaseResponse {
 		val lobbyId = lobbyManager.createLobby()
 
-		if (lobbyManager.joinLobby(lobbyId, playerIp) !is LobbyManager.JoinLobbyResult.Joined) {
+		if (lobbyManager.joinLobby(lobbyId, remotePlayerId) !is LobbyManager.JoinLobbyResult.Joined) {
 			return CreateLobbyResponse.error(ErrorCode.UnknownError)
 		}
 
