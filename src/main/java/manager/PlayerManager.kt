@@ -1,40 +1,50 @@
 package manager
 
 import io.vertx.core.net.NetSocket
+import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.sync.Mutex
+import kotlinx.coroutines.experimental.sync.withLock
 import model.Player
 import model.response.BaseResponse
-import java.util.concurrent.locks.ReentrantReadWriteLock
-import kotlin.concurrent.read
-import kotlin.concurrent.write
 
 class PlayerManager {
-	private val lock = ReentrantReadWriteLock()
+	private val mutex = Mutex()
 	private val playersList = mutableMapOf<String, Player>()
 
-	fun addPlayer(netSocket: NetSocket, playerIp: String, playerName: String): Boolean {
-		return lock.write {
+	suspend fun addPlayer(netSocket: NetSocket, playerIp: String, playerName: String): Boolean {
+		return mutex.withLock {
 			if (playersList.containsKey(playerIp)) {
-				return@write false
+				return@withLock false
 			}
 
 			playersList[playerIp] = Player(netSocket, playerIp, playerName)
-			return@write true
+			return@withLock true
 		}
 	}
 
-	fun removePlayer(player: Player) {
-		lock.write {
+	suspend fun removePlayer(player: Player) {
+		mutex.withLock {
 			playersList.remove(player.playerIp)
 			player.socket.close()
 		}
 	}
 
-	fun broadcast(currentPlayer: Player, response: BaseResponse) {
-		lock.read {
-			playersList.forEach { playerIp, player ->
-				if (playerIp != currentPlayer.playerIp) {
-					player.socket.write(response.toBuffer())
-				}
+	/**
+	 * This should be called when player suddenly loses connection.
+	 * At this point socket should already be closed
+	 * */
+	suspend fun removePlayer(playerIp: String) {
+		mutex.withLock { playersList.remove(playerIp) }
+	}
+
+	suspend fun broadcastTo(playerIpList: List<String>, baseResponse: BaseResponse) {
+		val playersToBroadcast = mutex.withLock {
+			return@withLock playerIpList.mapNotNull { playersList[it] }
+		}
+
+		launch {
+			for (player in playersToBroadcast) {
+				player.socket.write(baseResponse.toBuffer())
 			}
 		}
 	}

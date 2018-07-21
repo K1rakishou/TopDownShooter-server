@@ -26,7 +26,7 @@ class ServerVerticle(
 		}.listen(14887)
 	}
 
-	private fun handleData(buffer: Buffer, socket: NetSocket) {
+	private suspend fun handleData(buffer: Buffer, socket: NetSocket) {
 		println("new request from ${socket.remoteAddress().host()}")
 
 		val response = try {

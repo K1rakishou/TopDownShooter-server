@@ -3,6 +3,7 @@ package handlers
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.net.NetSocket
 import manager.PlayerManager
+import model.ErrorCode
 import model.network.ConnectionResult
 import model.network.PacketType
 import model.response.BaseResponse
@@ -13,14 +14,15 @@ class ConnectionHandler(
 	private val playerManager: PlayerManager
 ) : BaseHandler() {
 
-	fun handle(socket: NetSocket, input: Buffer, packetType: PacketType, offset: AtomicInteger): BaseResponse {
+	override suspend fun handle(socket: NetSocket, playerIp: String, input: Buffer, packetType: PacketType, offset: AtomicInteger): BaseResponse {
 		val length = input.getIntLE(offset.getAndAdd(4))
 		val playerName = input.getString(offset.get(), offset.get() + length)
 			.also { offset.addAndGet(length) }
 
-		val playerIp = socket.remoteAddress().host()
-		playerManager.addPlayer(socket, playerIp, playerName)
+		if (!playerManager.addPlayer(socket, playerIp, playerName)) {
+			return ConnectionResponse.error(ErrorCode.UnknownError)
+		}
 
-		return ConnectionResponse(ConnectionResult.Connected, packetType)
+		return ConnectionResponse.success(ConnectionResult.Connected)
 	}
 }

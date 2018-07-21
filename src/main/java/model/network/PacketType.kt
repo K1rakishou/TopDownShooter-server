@@ -2,7 +2,9 @@ package model.network
 
 enum class PacketType(val id: Int) {
 	Connect(0),
-	Disconnect(1);
+	Disconnect(1),
+	CreateLobby(2),
+	JoinLobby(3);
 
 	companion object {
 		fun from(value: Int): PacketType {
