@@ -2,13 +2,12 @@ package model.response
 
 import io.vertx.core.buffer.Buffer
 import model.ErrorCode
-import model.network.PacketType
+import model.network.ResponseType
 
 class CreateLobbyResponse private constructor(
-	packetType: PacketType,
 	private val errorCode: ErrorCode,
 	private val lobbyId: Long
-) : BaseResponse(packetType, errorCode) {
+) : BaseResponse(ResponseType.CreateLobby, errorCode) {
 
 	override fun toBuffer(): Buffer {
 		val buffer = super.toBuffer()
@@ -22,11 +21,11 @@ class CreateLobbyResponse private constructor(
 
 	companion object {
 		fun success(lobbyId: Long): CreateLobbyResponse {
-			return CreateLobbyResponse(PacketType.CreateLobby, ErrorCode.Ok, lobbyId)
+			return CreateLobbyResponse(ErrorCode.Ok, lobbyId)
 		}
 
 		fun error(errorCode: ErrorCode): CreateLobbyResponse {
-			return CreateLobbyResponse(PacketType.CreateLobby, errorCode, -1L)
+			return CreateLobbyResponse(errorCode, -1L)
 		}
 	}
 }

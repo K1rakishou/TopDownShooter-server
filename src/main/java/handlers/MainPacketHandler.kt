@@ -8,9 +8,10 @@ import model.Response
 import model.network.PacketType
 import java.util.concurrent.atomic.AtomicInteger
 
-class PacketHandler(
+class MainPacketHandler(
 	private val connectionHandler: ConnectionHandler,
-	private val createLobbyHandler: CreateLobbyHandler
+	private val createLobbyHandler: CreateLobbyHandler,
+	private val joinLobbyHandler: JoinLobbyHandler
 ) {
 	suspend fun handle(socket: NetSocket, input: Buffer): Response {
 		val playerIp = socket.remoteAddress().host()
@@ -28,7 +29,7 @@ class PacketHandler(
 			PacketType.Connect -> connectionHandler.handle(socket, playerIp, input, packetType, offset)
 			PacketType.Disconnect -> TODO()
 			PacketType.CreateLobby -> createLobbyHandler.handle(socket, playerIp, input, packetType, offset)
-			PacketType.JoinLobby -> TODO()
+			PacketType.JoinLobby -> joinLobbyHandler.handle(socket, playerIp, input, packetType, offset)
 		}
 
 		return Response.Ok(receiverId, response.toBuffer())

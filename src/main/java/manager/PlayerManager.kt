@@ -6,9 +6,11 @@ import kotlinx.coroutines.experimental.sync.Mutex
 import kotlinx.coroutines.experimental.sync.withLock
 import model.Player
 import model.response.BaseResponse
+import java.util.concurrent.atomic.AtomicInteger
 
 class PlayerManager {
 	private val mutex = Mutex()
+	private val playerIdPool = AtomicInteger()
 	private val playersList = mutableMapOf<String, Player>()
 
 	suspend fun addPlayer(netSocket: NetSocket, playerIp: String, playerName: String): Boolean {
@@ -17,7 +19,7 @@ class PlayerManager {
 				return@withLock false
 			}
 
-			playersList[playerIp] = Player(netSocket, playerIp, playerName)
+			playersList[playerIp] = Player(netSocket, playerIp, playerIdPool.getAndIncrement(), playerName)
 			return@withLock true
 		}
 	}
@@ -47,5 +49,9 @@ class PlayerManager {
 				player.socket.write(baseResponse.toBuffer())
 			}
 		}
+	}
+
+	suspend fun getPlayerId(playerIp: String): Int? {
+		return mutex.withLock { playersList[playerIp]?.palyerId }
 	}
 }

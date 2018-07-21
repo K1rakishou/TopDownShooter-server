@@ -16,7 +16,7 @@ class CreateLobbyHandler(
 	override suspend fun handle(socket: NetSocket, playerIp: String, input: Buffer, packetType: PacketType, offset: AtomicInteger): BaseResponse {
 		val lobbyId = lobbyManager.createLobby()
 
-		if (!lobbyManager.joinLobby(lobbyId, playerIp)) {
+		if (lobbyManager.joinLobby(lobbyId, playerIp) !is LobbyManager.JoinLobbyResult.Joined) {
 			return CreateLobbyResponse.error(ErrorCode.UnknownError)
 		}
 

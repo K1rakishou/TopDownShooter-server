@@ -6,6 +6,7 @@ import math.Vector3
 class Player(
 	val socket: NetSocket,
 	val playerIp: String,
+	val palyerId: Int,
 	val playerName: String
 ) : NetworkEntity(playerName, Vector3.zero()) {
 

@@ -15,19 +15,19 @@ class GameLobby(
 	private val playersInLobby = mutableListOf<String>()
 	private val playerReadyStateMap = mutableMapOf<String, Boolean>()
 
-	suspend fun join(playerIp: String): Boolean {
+	suspend fun join(playerIp: String): Int? {
+		var playerId: Int? = null
+
 		mutex.withLock {
 			assert(!playerReadyStateMap.containsKey(playerIp))
 
-			if (playersInLobby.size >= MAX_PLAYERS) {
-				return false
-			}
-
 			playersInLobby += playerIp
 			playerReadyStateMap[playerIp] = false
+
+			playerId = playerManager.getPlayerId(playerIp)
 		}
 
-		return true
+		return playerId
 	}
 
 	suspend fun quit(playerIp: String) {
@@ -35,6 +35,10 @@ class GameLobby(
 			playersInLobby.removeFirst { it == playerIp }
 			playerReadyStateMap.remove(playerIp)
 		}
+	}
+
+	suspend fun isFull(): Boolean {
+		return mutex.withLock { playersInLobby.size >= MAX_PLAYERS }
 	}
 
 	suspend fun playersCount(): Int {

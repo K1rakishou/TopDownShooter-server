@@ -1,5 +1,5 @@
 
-import handlers.PacketHandler
+import handlers.MainPacketHandler
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.net.NetSocket
 import io.vertx.kotlin.coroutines.CoroutineVerticle
@@ -9,7 +9,7 @@ import model.ErrorCode
 import model.Response
 
 class ServerVerticle(
-	private val packetHandler: PacketHandler
+	private val mainPacketHandler: MainPacketHandler
 ) : CoroutineVerticle() {
 	private val HEADER_SIZE = 8
 	private val RECEIVER_ID_SIZE = 8
@@ -20,6 +20,10 @@ class ServerVerticle(
 		server.connectHandler { socket ->
 			socket.handler { buffer ->
 				launch { handleData(buffer, socket) }
+			}.closeHandler {
+				//TODO disconnect player
+			}.exceptionHandler {
+				//TODO disconnect player
 			}
 		}.exceptionHandler { error ->
 			error.printStackTrace()
@@ -30,7 +34,7 @@ class ServerVerticle(
 		println("new request from ${socket.remoteAddress().host()}")
 
 		val response = try {
-			packetHandler.handle(socket, buffer)
+			mainPacketHandler.handle(socket, buffer)
 		} catch (error: Throwable) {
 			error.printStackTrace()
 			ErrorCode.UnknownError
